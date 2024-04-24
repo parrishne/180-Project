@@ -1,0 +1,59 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Function to calculate average HRPB (Home Runs per Bat) per age bin for a given season
+def calculate_average_hrp_per_age(file_path_people, file_path_batting, season_year):
+    # Read the People Excel file
+    people_data = pd.read_excel(file_path_people)
+
+    # Filter out players whose debut game occurred after the given season or whose final game occurred before the given season
+    people_data = people_data[(people_data['debut'].dt.year <= season_year) & (people_data['finalGame'].dt.year >= season_year)]
+
+    # Calculate age based on April 1 of the season year
+    current_year = season_year
+    current_month = 4
+    current_day = 1
+
+    # Convert birthYear, birthMonth, and birthDay to integers
+    people_data['birthYear'] = people_data['birthYear'].astype(int)
+    people_data['birthMonth'] = people_data['birthMonth'].astype(int)
+    people_data['birthDay'] = people_data['birthDay'].astype(int)
+
+    # Calculate age
+    people_data['age'] = current_year - people_data['birthYear']
+    people_data.loc[(people_data['birthMonth'] > current_month) | ((people_data['birthMonth'] == current_month) & (people_data['birthDay'] > current_day)), 'age'] -= 1
+
+    # Filter players aged 20-40 years old
+    people_data = people_data[(people_data['age'] >= 20) & (people_data['age'] <= 40)]
+
+    # Read the Batting Excel file
+    batting_data = pd.read_excel(file_path_batting)
+
+    # Merge batting data with people data based on playerID
+    merged_data = pd.merge(batting_data, people_data, on='playerID', how='inner')
+
+    # Group batting data by age and calculate average HRPB (Home Runs per Bat) per age group
+    average_hrp_per_age = merged_data.groupby('age')['HRPB'].mean().reset_index()
+
+    return average_hrp_per_age
+
+# File paths
+people_file_path = r'C:/Users/nparr/OneDrive/Desktop/ITSCM 180/People.xlsx'
+batting_file_path = r'C:/Users/nparr/OneDrive/Desktop/ITSCM 180/Batting.xlsx'
+
+# List to store average HRPB per age bin for each season
+average_hrp_per_age_all_seasons = []
+
+# Calculate average HRPB per age bin for each season from 1970 to 2022
+for season_year in range(1970, 2023):
+    average_hrp_per_age = calculate_average_hrp_per_age(people_file_path, batting_file_path, season_year)
+    average_hrp_per_age_all_seasons.append(average_hrp_per_age)
+
+# Concatenate all seasons' data and calculate aggregate average for each age bin
+aggregate_average_hrp_per_age = pd.concat(average_hrp_per_age_all_seasons).groupby('age')['HRPB'].mean().reset_index()
+
+# Find the age bin with the highest average HRPB
+best_age_bin = aggregate_average_hrp_per_age.loc[aggregate_average_hrp_per_age['HRPB'].idxmax()]
+
+# Plot scatterplot of aggregate average HRPB against age
+plt.figure(figsize=(10, 6))
