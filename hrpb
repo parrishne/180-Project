@@ -57,3 +57,11 @@ best_age_bin = aggregate_average_hrp_per_age.loc[aggregate_average_hrp_per_age['
 
 # Plot scatterplot of aggregate average HRPB against age
 plt.figure(figsize=(10, 6))
+plt.scatter(aggregate_average_hrp_per_age['age'], aggregate_average_hrp_per_age['HRPB'], color='skyblue', alpha=0.7)
+plt.xlabel('Age')
+plt.ylabel('Average HRPB (Home Runs per Bat)')
+plt.title('Aggregate Average HRPB by Age Group (1970-2023) - Players Aged 20-40 Only')
+plt.grid(True)
+plt.show()
+
+print(f"The age bin with the highest average HRPB is {best_age_bin['age']} years old, with an average HRPB of {best_age_bin['HRPB']:.3f}.")
